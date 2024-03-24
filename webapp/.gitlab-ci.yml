@@ -1,0 +1,47 @@
+stages:
+  - deploy
+  - apply
+
+variables:
+  ROOT_PATH: '${CI_PROJECT_DIR}/webapp'
+  AWS_ACCOUNT_ID: <AWS account id>
+  AWS_ROLE_NAME: <AWS role name in the above account with all permissions>
+
+
+before_script:
+  - pwd
+  - echo "Starting"
+
+ 
+default:
+  tags:
+    - shared
+
+ 
+deploy_terraform:
+  stage: deploy
+  script:
+    - terraform --version
+    - rm -f ~/.aws/credentials
+    - chmod +x assume-role.sh
+    - ./assume-role.sh $AWS_Account_ID $AWS_ROLE_NAME
+    - cd $ROOT_PATH
+    - terraform init
+    - terraform fmt
+    - terraform plan 
+
+   
+
+apply_terraform:
+  stage: apply
+  script:
+    - terraform --version
+    - cd $ROOT_PATH
+    - terraform init
+    - terraform apply --auto-approve
+    #- terraform destroy -var-file="npe.tfvars" --auto-approve
+    - rm -f ~/.aws/credentials
+  when: manual
+
+ 
+
